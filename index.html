@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMDR Confort Visuel</title>
+    <style>
+        :root {
+            /* Fond plus doux, moins bleu, plus neutre */
+            --bg-color: #1a1a1a;
+            --bg-gradient: #242424;
+            --bg-pause: #1f2923;
+            
+            /* Panneau plus discret */
+            --panel-bg: rgba(30, 30, 30, 0.85);
+            
+            /* Texte moins contrasté */
+            --text-main: #e0e0e0;
+            --text-muted: #888888;
+            
+            /* Accent plus doux */
+            --accent: #64b5f6;
+            --accent-glow: rgba(100, 181, 246, 0.2);
+            
+            /* Couleurs d'état */
+            --danger: #e57373;
+            --success: #81c784;
+            --warning: #ffb74d;
+            --sound-active: #a1887f;
+            
+            /* --- NOUVEAU POINT AMBRE CONFORT --- */
+            --dot-color: #ffb74d; /* Ambre doux */
+            --dot-center: #ffe0b2; /* Centre plus clair */
+            --dot-glow: rgba(255, 183, 77, 0.15); /* Lueur très diffuse */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            /* Dégradé très subtil pour éviter l'effet "trou noir" */
+            background-image: radial-gradient(circle at 50% 50%, var(--bg-gradient) 0%, var(--bg-color) 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: var(--text-main);
+            overflow: hidden;
+            transition: background-color 1.5s ease;
+            user-select: none;
+        }
+
+        body.pause-mode {
+            background-color: var(--bg-pause);
+            background-image: radial-gradient(circle at 50% 50%, #2e3b2f 0%, var(--bg-pause) 100%);
+        }
+
+        /* --- Zone de Stimulus (CENTRÉE) --- */
+        #stimulus-container {
+            width: 95%;
+            height: 200px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin: 0; 
+            flex-shrink: 0;
+        }
+
+        #dot {
+            width: 70px; /* Légèrement plus grand pour faciliter le suivi */
+            height: 70px;
+            /* Dégradé radial très doux pour éviter les bords nets */
+            background: radial-gradient(circle, var(--dot-center) 0%, var(--dot-color) 60%, transparent 100%);
+            border-radius: 50%;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            /* Filtre de flou pour adoucir la lumière */
+            filter: blur(2px);
+            /* Lueur très diffuse */
+            box-shadow: 0 0 40px var(--dot-glow);
+            will-change: left;
+            transition: box-shadow 0.3s, opacity 0.3s;
+            opacity: 0.9; /* Pas 100% pour réduire l'intensité */
+        }
+
+        #dot.sound-active {
+            box-shadow: 0 0 60px rgba(255, 183, 77, 0.25);
+            opacity: 1;
+        }
+
+        /* Indicateurs audio (Très discrets) */
+        .audio-indicator {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(161, 136, 127, 0.05);
+            border: 1px solid rgba(161, 136, 127, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            pointer-events: none;
+            filter: blur(1px);
+        }
+        .audio-indicator.left { left: 30px; }
+        .audio-indicator.right { right: 30px; }
+        .audio-indicator.active {
+            opacity: 1;
+            background: rgba(161, 136, 127, 0.2);
+            border-color: rgba(161, 136, 127, 0.4);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* --- Panneau de Contrôle (En bas) --- */
+        .controls-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            width: 100%;
+            max-width: 550px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            z-index: 10;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .controls-panel.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-50%) translateY(100%);
+        }
+
+        /* Timer & Info Display */
+        .info-display {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .timer-display {
+            font-size: 2.5rem;
+            font-weight: 200;
+            color: var(--accent);
+            text-shadow: none; /* Supprimé pour moins de brillance */
+            font-variant-numeric: tabular-nums;
+            opacity: 0.9;
+        }
+
+        .set-display {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-message {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.8rem;
+            color: var(--success);
+            font-weight: 600;
+            display: none;
+            text-align: center;
+            z-index: 5;
+            opacity: 0.9;
+        }
+
+        /* Sliders & Inputs */
+        .control-group {
+            margin-bottom: 12px;
+        }
+        
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        input[type="range"], input[type="number"], select {
+            width: 100%;
+            background: #2a2a2a;
+            border: 1px solid #333333;
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        input[type="range"] {
+            height: 6px;
+            padding: 0;
+            border: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: none;
+        }
+
+        /* Toggle Switch for Sound */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: #333333;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: var(--sound-active);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(24px);
+        }
+
+        /* Time Inputs Row */
+        .time-inputs-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* Frequency Presets Grid */
+        .frequency-presets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .frequency-btn {
+            background: #2a2a2a;
+            border: 1px solid #333333;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            position: relative;
+            color: var(--text-main);
+        }
+
+        .frequency-btn:hover {
+            background: #333333;
+        }
+
+        .frequency-btn.active {
+            background: rgba(161, 136, 127, 0.2);
+            border-color: rgba(161, 136, 127, 0.4);
+        }
+
+        .frequency-btn .hz {
+            font-weight: 700;
+            display: block;
+        }
+
+        .frequency-btn .label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 2px;
+        }
+
+        .frequency-btn .badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            font-size: 0.6rem;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .badge-science {
+            background: var(--success);
+            color: #1a1a1a;
+        }
+
+        .badge-traditional {
+            background: var(--warning);
+            color: #1a1a1a;
+        }
+
+        /* Buttons Grid */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #1a1a1a;
+        }
+
+        .btn-primary:hover {
+            background: #90caf9;
+        }
+
+        .btn-secondary {
+            background: #333333;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background: #444444;
+        }
+
+        .btn-danger {
+            background: rgba(229, 115, 115, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            display: none;
+        }
+        
+        .btn-danger:hover {
+            background: var(--danger);
+            color: #1a1a1a;
+        }
+
+        .btn-warning {
+            background: rgba(255, 183, 77, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .btn-warning:hover {
+            background: var(--warning);
+            color: #1a1a1a;
+        }
+
+        /* --- Bouton Flottant --- */
+        #floating-stop {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(229, 115, 115, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            z-index: 50;
+        }
+        #floating-stop:hover { background: var(--danger); color: #1a1a1a; }
+
+        .hide { display: none !important; }
+        
+        /* Scrollbar pour le panel */
+        .controls-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        .controls-panel::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        .controls-panel::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+
+        .sound-badge {
+            font-size: 0.7rem;
+            background: var(--sound-active);
+            color: #1a1a1a;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: none;
+        }
+        .sound-badge.visible {
+            display: inline-block;
+        }
+
+        .audio-warning {
+            background: rgba(255, 183, 77, 0.1);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+        }
+        .audio-warning.visible {
+            display: block;
+        }
+
+        .frequency-disclaimer {
+            background: rgba(100, 181, 246, 0.1);
+            border: 1px solid rgba(100, 181, 246, 0.2);
+            color: var(--accent);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            margin-top: 10px;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .frequency-disclaimer strong {
+            color: var(--text-main);
+        }
+
+        .current-frequency {
+            background: rgba(161, 136, 127, 0.15);
+            border: 1px solid rgba(161, 136, 127, 0.3);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+
+        .current-frequency .hz-value {
+            font-weight: 700;
+            color: var(--dot-color);
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Indicateurs Audio Gauche/Droite -->
+    <div class="audio-indicator left" id="audioLeft">🔊</div>
+    <div class="audio-indicator right" id="audioRight">🔊</div>
+
+    <!-- Message de statut (Pause / Fin) -->
+    <div class="status-message" id="statusMessage"></div>
+
+    <!-- Zone de mouvement (CENTRÉE) -->
+    <div id="stimulus-container">
+        <div id="dot"></div>
+    </div>
+
+    <!-- Bouton d'urgence flottant -->
+    <div id="floating-stop" onclick="stopSession()">✕</div>
+
+    <!-- Panneau de Contrôle (En bas de page) -->
+    <div class="controls-panel" id="controls">
+        <div class="info-display">
+            <div class="timer-display" id="timerDisplay">00:00</div>
+            <div class="set-display" id="setDisplay">
+                Série 0 / 0
+                <span class="sound-badge" id="soundBadge">🔊 SON ACTIF</span>
+            </div>
+        </div>
+
+        <!-- Avertissement Audio -->
+        <div class="audio-warning" id="audioWarning">
+            ⚠️ Activez le son avant de démarrer pour une expérience optimale
+        </div>
+
+        <!-- Section Audio -->
+        <div class="control-group" style="background: rgba(161, 136, 127, 0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(161, 136, 127, 0.2);">
+            <div class="control-header">
+                <label style="color: var(--sound-active);">🎵 Son & Fréquences</label>
+                <div class="toggle-container">
+                    <span id="soundStatus">OFF</span>
+                    <div class="toggle-switch" id="soundToggle" onclick="toggleSound()"></div>
+                </div>
+            </div>
+            
+            <div id="soundControls" style="opacity: 0.5; pointer-events: none; transition: opacity 0.3s;">
+                
+                <!-- Fréquences Préréglées -->
+                <div class="control-group">
+                    <div class="control-header">
+                        <label>Fréquence émotionnelle</label>
+                    </div>
+                    <div class="frequency-presets">
+                        <button class="frequency-btn active" data-freq="0" data-type="none">
+                            <span class="hz">Aucune</span>
+                            <span class="label">Son neutre</span>
+                        </button>
+                        <button class="frequency-btn" data-freq="6" data-type="science">
+                            <span class="hz">6 Hz</span>
+                            <span class="label">Régulation émotionnelle</span>
+                            <span class="badge badge-science">Science</span>
+                        </button>
+                        <button class="frequency-btn" data-freq="10" data-type="science">
+                            <span class="hz">10 Hz</span>
+                            <span class="label">Calme attentif</span>
+                            <span class="badge badge-science">Science</span>
+                        </button>
+                        <button class="frequency-btn" data-freq="174" data-type="traditional">
+                            <span class="hz">174 Hz</span>
+                            <span class="label">Apaisement douleur</span>
+                            <span class="badge badge-traditional">Tradition</span>
+                        </button>
+                        <button class="frequency-btn" data-freq="396" data-type="traditional">
+                            <span class="hz">396 Hz</span>
+                            <span class="label">Libération des peurs</span>
+                            <span class="badge badge-traditional">Tradition</span>
+                        </button>
+                        <button class="frequency-btn" data-freq="432" data-type="traditional">
+                            <span class="hz">432 Hz</span>
+                            <span class="label">Harmonie & stress</span>
+                            <span class="badge badge-traditional">Tradition</span>
+                        </button>
+                        <button class="frequency-btn" data-freq="528" data-type="traditional">
+                            <span class="hz">528 Hz</span>
+                            <span class="label">Transformation</span>
+                            <span class="badge badge-traditional">Tradition</span>
+                        </button>
+                        <button class="frequency-btn" data-freq="963" data-type="traditional">
+                            <span class="hz">963 Hz</span>
+                            <span class="label">Connexion spirituelle</span>
+                            <span class="badge badge-traditional">Tradition</span>
+                        </button>
+                    </div>
+                    
+                    <div class="current-frequency" id="currentFrequencyDisplay">
+                        Fréquence actuelle : <span class="hz-value">Aucune</span>
+                    </div>
+                </div>
+
+                <!-- Volume -->
+                <div class="control-group">
+                    <div class="control-header">
+                        <label>Volume</label>
+                        <span id="volumeVal">50%</span>
+                    </div>
+                    <input type="range" id="volumeRange" min="0" max="100" step="5" value="50">
+                </div>
+
+                <!-- Type de son -->
+                <div class="control-group">
+                    <div class="control-header">
+                        <label>Type de son</label>
+                    </div>
+                    <select id="soundType">
+                        <option value="beep">Bip doux (synchronisé)</option>
+                        <option value="tone">Ton continu (fréquence pure)</option>
+                        <option value="click">Clic court</option>
+                        <option value="double">Double bip</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Disclaimer -->
+            <div class="frequency-disclaimer">
+                <strong>ℹ️ Information :</strong> Les fréquences 6Hz et 10Hz sont basées sur la recherche en neurosciences (ondes cérébrales). 
+                Les autres fréquences sont issues de traditions populaires. Les effets varient selon les individus. 
+                Cet outil ne remplace pas un accompagnement thérapeutique.
+            </div>
+        </div>
+
+        <!-- Paramètres EMDR -->
+        <div class="control-group">
+            <div class="control-header">
+                <label>Nombre de séries</label>
+            </div>
+            <input type="number" id="setsInput" value="6" min="1" max="50">
+        </div>
+
+        <div class="control-group">
+            <div class="control-header">
+                <label>Temps (en secondes)</label>
+            </div>
+            <div class="time-inputs-row">
+                <div>
+                    <label style="font-size: 0.75rem; color: var(--text-muted);">Durée série</label>
+                    <input type="number" id="setDurationInput" value="30" min="5" max="120">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; color: var(--text-muted);">Durée pause</label>
+                    <input type="number" id="pauseDurationInput" value="10" min="3" max="60">
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="control-header">
+                <label>Vitesse du mouvement</label>
+                <span id="speedVal">2.1s</span>
+            </div>
+            <input type="range" id="speedRange" min="0.5" max="4" step="0.1" value="2.1">
+        </div>
+
+        <div class="control-group">
+            <div class="control-header">
+                <label>Taille du point</label>
+                <span id="sizeVal">70px</span>
+            </div>
+            <input type="range" id="sizeRange" min="30" max="100" step="5" value="70">
+        </div>
+
+        <div class="btn-grid">
+            <button id="startBtn" class="btn-primary">DÉMARRER</button>
+            <button id="stopBtn" class="btn-danger">ARRÊTER</button>
+            <button id="resetBtn" class="btn-warning">RÉINITIALISER</button>
+        </div>
+        
+        <p style="text-align: center; font-size: 0.75rem; color: #666666; margin-top: 15px; margin-bottom: 5px;">
+            🎧 Casque recommandé pour l'audio bilatéral
+        </p>
+    </div>
+
+    <script>
+        // --- Éléments DOM ---
+        const dot = document.getElementById('dot');
+        const controls = document.getElementById('controls');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const floatingStop = document.getElementById('floating-stop');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const setDisplay = document.getElementById('setDisplay');
+        const statusMessage = document.getElementById('statusMessage');
+        const setsInput = document.getElementById('setsInput');
+        const setDurationInput = document.getElementById('setDurationInput');
+        const pauseDurationInput = document.getElementById('pauseDurationInput');
+        const speedRange = document.getElementById('speedRange');
+        const sizeRange = document.getElementById('sizeRange');
+        const speedVal = document.getElementById('speedVal');
+        const sizeVal = document.getElementById('sizeVal');
+        
+        // Éléments Audio
+        const soundToggle = document.getElementById('soundToggle');
+        const soundStatus = document.getElementById('soundStatus');
+        const soundControls = document.getElementById('soundControls');
+        const soundType = document.getElementById('soundType');
+        const volumeRange = document.getElementById('volumeRange');
+        const volumeVal = document.getElementById('volumeVal');
+        const soundBadge = document.getElementById('soundBadge');
+        const audioLeft = document.getElementById('audioLeft');
+        const audioRight = document.getElementById('audioRight');
+        const audioWarning = document.getElementById('audioWarning');
+        const currentFrequencyDisplay = document.getElementById('currentFrequencyDisplay');
+        const frequencyBtns = document.querySelectorAll('.frequency-btn');
+
+        // --- Valeurs par défaut ---
+        const DEFAULTS = {
+            sets: 6,
+            setDuration: 30,
+            pauseDuration: 10,
+            speed: 2.1,
+            size: 70,
+            soundEnabled: false,
+            frequency: 0,
+            soundType: 'beep',
+            volume: 50
+        };
+
+        // --- État ---
+        let isRunning = false;
+        let isPaused = false;
+        let animationFrame;
+        let timerInterval;
+        let timeLeft = 0;
+        let direction = 1;
+        let position = 0;
+        let lastTime = 0;
+        
+        // Gestion des séries
+        let totalSets = 6;
+        let currentSet = 0;
+        let setDuration = 30;
+        let pauseDuration = 10;
+        
+        // État Audio
+        let isSoundEnabled = false;
+        let audioContext = null;
+        let currentVolume = 0.5;
+        let currentFrequency = 0;
+        let soundLocked = false;
+        let lastSoundSide = null;
+        let continuousOscillator = null;
+        let continuousGain = null;
+
+        // --- Initialisation ---
+        function updateLabels() {
+            speedVal.innerText = speedRange.value + 's';
+            sizeVal.innerText = sizeRange.value + 'px';
+            dot.style.width = sizeRange.value + 'px';
+            dot.style.height = sizeRange.value + 'px';
+        }
+
+        function updateVolumeLabel() {
+            volumeVal.innerText = volumeRange.value + '%';
+            currentVolume = volumeRange.value / 100;
+            
+            if (continuousGain && isRunning && !isPaused) {
+                continuousGain.gain.setValueAtTime(currentVolume * 0.3, audioContext.currentTime);
+            }
+        }
+
+        function updateFrequencyDisplay(freq) {
+            if (freq === 0) {
+                currentFrequencyDisplay.querySelector('.hz-value').innerText = 'Aucune';
+            } else {
+                currentFrequencyDisplay.querySelector('.hz-value').innerText = freq + ' Hz';
+            }
+        }
+
+        speedRange.addEventListener('input', updateLabels);
+        sizeRange.addEventListener('input', updateLabels);
+        volumeRange.addEventListener('input', updateVolumeLabel);
+
+        frequencyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                frequencyBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFrequency = parseInt(btn.dataset.freq);
+                updateFrequencyDisplay(currentFrequency);
+            });
+        });
+
+        function updateSetDisplay() {
+            setDisplay.innerHTML = `Série ${currentSet} / ${totalSets} <span class="sound-badge ${isSoundEnabled ? 'visible' : ''}">🔊 SON ACTIF</span>`;
+        }
+
+        function resetTimerDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerDisplay.innerText = `${mins < 10 ? '0'+mins : mins}:${secs < 10 ? '0'+secs : secs}`;
+        }
+
+        // --- Gestion du Son ---
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    console.log('Audio Context resumed');
+                }).catch(err => {
+                    console.error('Failed to resume audio:', err);
+                });
+            }
+        }
+
+        function toggleSound() {
+            isSoundEnabled = !isSoundEnabled;
+            
+            if (isSoundEnabled) {
+                soundToggle.classList.add('active');
+                soundStatus.innerText = 'ON';
+                soundStatus.style.color = 'var(--sound-active)';
+                soundControls.style.opacity = '1';
+                soundControls.style.pointerEvents = 'auto';
+                audioWarning.classList.remove('visible');
+                initAudio();
+            } else {
+                soundToggle.classList.remove('active');
+                soundStatus.innerText = 'OFF';
+                soundStatus.style.color = 'var(--text-muted)';
+                soundControls.style.opacity = '0.5';
+                soundControls.style.pointerEvents = 'none';
+                stopContinuousSound();
+            }
+            
+            updateSetDisplay();
+        }
+
+        function startContinuousSound() {
+            if (!isSoundEnabled || !audioContext || currentFrequency === 0) return;
+            if (soundType.value !== 'tone') return;
+            
+            stopContinuousSound();
+            
+            const now = audioContext.currentTime;
+            continuousOscillator = audioContext.createOscillator();
+            continuousGain = audioContext.createGain();
+            const panNode = audioContext.createStereoPanner();
+            
+            continuousOscillator.type = 'sine';
+            continuousOscillator.frequency.setValueAtTime(currentFrequency, now);
+            continuousGain.gain.setValueAtTime(currentVolume * 0.3, now);
+            
+            panNode.pan.value = -1;
+            
+            continuousOscillator.connect(continuousGain);
+            continuousGain.connect(panNode);
+            panNode.connect(audioContext.destination);
+            
+            continuousOscillator.start(now);
+            
+            window.continuousPanInterval = setInterval(() => {
+                if (!isPaused && isRunning) {
+                    const newPan = panNode.pan.value === -1 ? 1 : -1;
+                    panNode.pan.setValueAtTime(newPan, audioContext.currentTime);
+                    
+                    audioLeft.classList.remove('active');
+                    audioRight.classList.remove('active');
+                    if (newPan === -1) {
+                        audioLeft.classList.add('active');
+                    } else {
+                        audioRight.classList.add('active');
+                    }
+                    setTimeout(() => {
+                        audioLeft.classList.remove('active');
+                        audioRight.classList.remove('active');
+                    }, 200);
+                }
+            }, speedRange.value * 1000 / 2);
+        }
+
+        function stopContinuousSound() {
+            if (continuousOscillator) {
+                try {
+                    continuousOscillator.stop();
+                    continuousOscillator.disconnect();
+                } catch(e) {}
+                continuousOscillator = null;
+            }
+            if (continuousGain) {
+                continuousGain.disconnect();
+                continuousGain = null;
+            }
+            if (window.continuousPanInterval) {
+                clearInterval(window.continuousPanInterval);
+                window.continuousPanInterval = null;
+            }
+        }
+
+        function playBilateralSound(side) {
+            if (!isSoundEnabled || !audioContext || isPaused) return;
+            if (soundType.value === 'tone') return;
+            
+            const freq = currentFrequency > 0 ? currentFrequency : 440;
+            const type = soundType.value;
+            const now = audioContext.currentTime;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const panNode = audioContext.createStereoPanner();
+            
+            panNode.pan.value = side === 'left' ? -1 : 1;
+            
+            switch(type) {
+                case 'beep':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(freq, now);
+                    gainNode.gain.setValueAtTime(currentVolume, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    break;
+                case 'click':
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(800, now);
+                    gainNode.gain.setValueAtTime(currentVolume, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    break;
+                case 'double':
+                    const osc2 = audioContext.createOscillator();
+                    const gain2 = audioContext.createGain();
+                    const pan2 = audioContext.createStereoPanner();
+                    
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(freq, now);
+                    gainNode.gain.setValueAtTime(currentVolume * 0.8, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(freq, now + 0.12);
+                    gain2.gain.setValueAtTime(currentVolume * 0.8, now + 0.12);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+                    
+                    pan2.pan.value = side === 'left' ? -1 : 1;
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(panNode);
+                    panNode.connect(audioContext.destination);
+                    
+                    osc2.connect(gain2);
+                    gain2.connect(pan2);
+                    pan2.connect(audioContext.destination);
+                    
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.1);
+                    osc2.start(now + 0.12);
+                    osc2.stop(now + 0.22);
+                    
+                    updateAudioIndicators(side);
+                    return;
+            }
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(panNode);
+            panNode.connect(audioContext.destination);
+            
+            oscillator.start(now);
+            oscillator.stop(now + 0.2);
+            
+            updateAudioIndicators(side);
+            
+            setTimeout(() => {
+                oscillator.disconnect();
+                gainNode.disconnect();
+                panNode.disconnect();
+            }, 500);
+        }
+
+        function updateAudioIndicators(side) {
+            audioLeft.classList.remove('active');
+            audioRight.classList.remove('active');
+            dot.classList.remove('sound-active');
+            
+            if (side === 'left') {
+                audioLeft.classList.add('active');
+            } else {
+                audioRight.classList.add('active');
+            }
+            
+            dot.classList.add('sound-active');
+            
+            setTimeout(() => {
+                audioLeft.classList.remove('active');
+                audioRight.classList.remove('active');
+                dot.classList.remove('sound-active');
+            }, 200);
+        }
+
+        function checkAndPlaySound() {
+            if (!isSoundEnabled || !isRunning || isPaused || soundLocked) return;
+            
+            const leftThreshold = 5;
+            const rightThreshold = 95;
+            
+            let currentSide = null;
+            
+            if (position <= leftThreshold && direction === -1) {
+                currentSide = 'left';
+            } else if (position >= rightThreshold && direction === 1) {
+                currentSide = 'right';
+            }
+            
+            if (currentSide && currentSide !== lastSoundSide) {
+                playBilateralSound(currentSide);
+                lastSoundSide = currentSide;
+                
+                soundLocked = true;
+                setTimeout(() => {
+                    soundLocked = false;
+                }, 200);
+            }
+            
+            if (position > 20 && position < 80) {
+                lastSoundSide = null;
+            }
+        }
+
+        // --- Fonction de Réinitialisation ---
+        function resetAll() {
+            if (isRunning) {
+                stopSession();
+            }
+
+            setsInput.value = DEFAULTS.sets;
+            setDurationInput.value = DEFAULTS.setDuration;
+            pauseDurationInput.value = DEFAULTS.pauseDuration;
+            speedRange.value = DEFAULTS.speed;
+            sizeRange.value = DEFAULTS.size;
+            volumeRange.value = DEFAULTS.volume;
+            soundType.value = DEFAULTS.soundType;
+            
+            frequencyBtns.forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.freq) === DEFAULTS.frequency) {
+                    btn.classList.add('active');
+                }
+            });
+            currentFrequency = DEFAULTS.frequency;
+            updateFrequencyDisplay(currentFrequency);
+            
+            if (isSoundEnabled) {
+                toggleSound();
+            }
+
+            updateLabels();
+            updateVolumeLabel();
+            updateSetDisplay();
+            
+            timeLeft = DEFAULTS.setDuration;
+            resetTimerDisplay();
+
+            position = 0;
+            direction = 1;
+            dot.style.left = '0%';
+            lastSoundSide = null;
+            soundLocked = false;
+
+            resetBtn.innerText = "RÉINITIALISÉ ✓";
+            setTimeout(() => {
+                resetBtn.innerText = "RÉINITIALISER";
+            }, 1500);
+        }
+
+        // --- Moteur d'Animation ---
+        function animate(timestamp) {
+            if (!isRunning || isPaused) return;
+
+            if (!lastTime) lastTime = timestamp;
+            const elapsed = timestamp - lastTime;
+            const speedFactor = 100 / (speedRange.value * 1000); 
+            const move = elapsed * speedFactor * direction;
+            
+            position += move;
+
+            if (position >= 100) {
+                position = 100;
+                direction = -1;
+            } else if (position <= 0) {
+                position = 0;
+                direction = 1;
+            }
+
+            dot.style.left = position + '%';
+            lastTime = timestamp;
+            
+            checkAndPlaySound();
+            
+            animationFrame = requestAnimationFrame(animate);
+        }
+
+        // --- Gestion du Timer et des Séries ---
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                resetTimerDisplay();
+
+                if (timeLeft <= 0) {
+                    handleTimerEnd();
+                }
+            }, 1000);
+        }
+
+        function handleTimerEnd() {
+            clearInterval(timerInterval);
+            
+            if (isPaused) {
+                resumeNextSet();
+            } else {
+                currentSet++;
+                updateSetDisplay();
+
+                if (currentSet >= totalSets) {
+                    endSession();
+                } else {
+                    startPause();
+                }
+            }
+        }
+
+        function startPause() {
+            isPaused = true;
+            cancelAnimationFrame(animationFrame);
+            stopContinuousSound();
+            
+            audioLeft.classList.remove('active');
+            audioRight.classList.remove('active');
+            dot.classList.remove('sound-active');
+            lastSoundSide = null;
+            soundLocked = false;
+            
+            document.body.classList.add('pause-mode');
+            statusMessage.style.display = 'block';
+            statusMessage.innerText = "PAUSE - Respirez profondément";
+            timerDisplay.style.color = "var(--success)";
+            
+            timeLeft = pauseDuration;
+            resetTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                resetTimerDisplay();
+                if (timeLeft <= 0) {
+                    handleTimerEnd();
+                }
+            }, 1000);
+        }
+
+        function resumeNextSet() {
+            isPaused = false;
+            
+            document.body.classList.remove('pause-mode');
+            statusMessage.style.display = 'none';
+            timerDisplay.style.color = "var(--accent)";
+            
+            position = 0;
+            direction = 1;
+            dot.style.left = '0%';
+            lastSoundSide = null;
+            soundLocked = false;
+            
+            timeLeft = setDuration;
+            resetTimerDisplay();
+            lastTime = 0;
+            
+            if (soundType.value === 'tone' && currentFrequency > 0) {
+                startContinuousSound();
+            }
+            
+            animationFrame = requestAnimationFrame(animate);
+            startTimer();
+        }
+
+        function endSession() {
+            isRunning = false;
+            stopContinuousSound();
+            stopSessionUI();
+            
+            statusMessage.style.display = 'block';
+            statusMessage.innerText = "SÉANCE TERMINÉE";
+            statusMessage.style.color = "var(--success)";
+            timerDisplay.innerText = "FIN";
+            
+            audioLeft.classList.remove('active');
+            audioRight.classList.remove('active');
+            dot.classList.remove('sound-active');
+        }
+
+        // --- Contrôles Principaux ---
+        function startSession() {
+            if (isRunning) return;
+            
+            if (isSoundEnabled && !audioContext) {
+                initAudio();
+            }
+            
+            if (!isSoundEnabled) {
+                audioWarning.classList.add('visible');
+            }
+            
+            totalSets = parseInt(setsInput.value) || DEFAULTS.sets;
+            setDuration = parseInt(setDurationInput.value) || DEFAULTS.setDuration;
+            pauseDuration = parseInt(pauseDurationInput.value) || DEFAULTS.pauseDuration;
+            
+            currentSet = 0;
+            isRunning = true;
+            isPaused = false;
+            lastTime = 0;
+            lastSoundSide = null;
+            soundLocked = false;
+            
+            if (isSoundEnabled) {
+                initAudio();
+                audioWarning.classList.remove('visible');
+                
+                if (soundType.value === 'tone' && currentFrequency > 0) {
+                    startContinuousSound();
+                }
+            }
+            
+            startBtn.classList.add('hide');
+            stopBtn.style.display = 'block';
+            floatingStop.style.display = 'flex';
+            controls.classList.add('hidden');
+            statusMessage.style.display = 'none';
+            document.body.classList.remove('pause-mode');
+            
+            updateSetDisplay();
+            
+            timeLeft = setDuration;
+            resetTimerDisplay();
+            animationFrame = requestAnimationFrame(animate);
+            startTimer();
+        }
+
+        function stopSession() {
+            isRunning = false;
+            isPaused = false;
+            cancelAnimationFrame(animationFrame);
+            clearInterval(timerInterval);
+            stopContinuousSound();
+            
+            audioLeft.classList.remove('active');
+            audioRight.classList.remove('active');
+            dot.classList.remove('sound-active');
+            lastSoundSide = null;
+            soundLocked = false;
+            
+            stopSessionUI();
+        }
+
+        function stopSessionUI() {
+            startBtn.classList.remove('hide');
+            startBtn.innerText = "REPRENDRE";
+            stopBtn.style.display = 'none';
+            floatingStop.style.display = 'none';
+            controls.classList.remove('hidden');
+            document.body.classList.remove('pause-mode');
+        }
+
+        startBtn.addEventListener('click', startSession);
+        stopBtn.addEventListener('click', stopSession);
+        resetBtn.addEventListener('click', resetAll);
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape" && isRunning) {
+                stopSession();
+            }
+        });
+
+        // Initial render
+        updateLabels();
+        updateVolumeLabel();
+        updateFrequencyDisplay(DEFAULTS.frequency);
+        updateSetDisplay();
+        resetTimerDisplay();
+    </script>
+</body>
+</html>
