@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>EMDR Confort Visuel – Thème clair apaisant</title>
+    <title>EMDR Confort Visuel – Version apaisante</title>
     <style>
         * {
             box-sizing: border-box;
@@ -27,7 +27,7 @@
             --dot-center: #fae6c0;
             --dot-shadow: rgba(0, 0, 0, 0.05);
             --border-light: #ccc8c0;
-            --message-color: #e0a158;  /* Nouvelle couleur pour les messages */
+            --message-color: #e0a158;
         }
 
         body {
@@ -60,7 +60,6 @@
             flex-shrink: 0;
         }
 
-        /* Point net, personnalisable */
         #dot {
             width: 70px;
             height: 70px;
@@ -83,7 +82,6 @@
             opacity: 1;
         }
 
-        /* Indicateurs audio latéraux */
         .audio-indicator {
             position: fixed;
             top: 50%;
@@ -111,7 +109,6 @@
             border-color: rgba(224, 161, 88, 0.7);
         }
 
-        /* Panneau de contrôle */
         .controls-panel {
             background: var(--panel-bg);
             backdrop-filter: blur(20px);
@@ -163,7 +160,7 @@
             transform: translateX(-50%);
             font-size: 1.9rem;
             font-weight: 500;
-            color: var(--message-color, #e0a158);  /* Couleur ambre douce */
+            color: var(--message-color);
             display: none;
             text-align: center;
             z-index: 15;
@@ -354,7 +351,6 @@
         </div>
     </div>
 
-    <!-- Personnalisation visuelle + test son -->
     <div class="control-group">
         <div class="flex-row" style="justify-content: space-between;">
             <div class="color-preview">
@@ -365,7 +361,6 @@
         </div>
     </div>
 
-    <!-- Section Audio & fréquences -->
     <div class="control-group" style="background: rgba(196,162,122,0.08); border-radius: 24px; padding: 12px;">
         <div class="control-header">
             <span>🎵 Son & Fréquences</span>
@@ -377,8 +372,6 @@
         <div id="soundControls">
             <div class="frequency-presets" id="freqGrid">
                 <button class="frequency-btn active" data-freq="0">🕊️ Aucune</button>
-                <button class="frequency-btn" data-freq="6">🌊 6 Hz · Régulation</button>
-                <button class="frequency-btn" data-freq="10">🍃 10 Hz · Calme</button>
                 <button class="frequency-btn" data-freq="174">💛 174 Hz · Apaisement</button>
                 <button class="frequency-btn" data-freq="396">💜 396 Hz · Libération</button>
                 <button class="frequency-btn" data-freq="432">✨ 432 Hz · Harmonie</button>
@@ -396,10 +389,9 @@
                 <option value="double">Double impulsion</option>
             </select>
         </div>
-        <div class="frequency-disclaimer">ℹ️ Fréquences 6Hz/10Hz issues de recherches neuroscientifiques. Casque recommandé.</div>
+        <div class="frequency-disclaimer">ℹ️ Fréquences issues des traditions sonores. Casque recommandé pour une expérience bilatérale optimale.</div>
     </div>
 
-    <!-- Paramètres EMDR -->
     <div class="control-group">
         <div class="control-header"><label>📊 Nombre de séries</label></div>
         <input type="number" id="setsInput" value="6" min="1" max="40">
@@ -502,9 +494,7 @@
         const center = getComputedStyle(document.body).getPropertyValue('--dot-center').trim() || '#fae6c0';
         dot.style.background = `radial-gradient(circle, ${center} 0%, ${color} 70%, #b87a2e 100%)`;
     }
-    dotColorPicker.addEventListener('input', (e) => {
-        updateDotColor(e.target.value);
-    });
+    dotColorPicker.addEventListener('input', (e) => updateDotColor(e.target.value));
 
     // ======================== AUDIO ========================
     function initAudioContext() {
@@ -512,61 +502,10 @@
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
         if (audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(e => console.warn("Impossible de démarrer l'audio:", e));
+            audioCtx.resume().catch(e => console.warn("Erreur audio:", e));
         }
         return audioCtx;
     }
-
-    // Test sonore : joue un bip à gauche puis à droite
-    function testSound() {
-        if (!isSoundEnabled) {
-            alert("Veuillez d'abord activer le son (bouton ON/OFF).");
-            return;
-        }
-        const ctx = initAudioContext();
-        if (!ctx) return;
-        const freq = currentFrequency > 0 ? currentFrequency : 440;
-        const volume = currentVolume;
-        const now = ctx.currentTime;
-        // Bip gauche
-        const oscL = ctx.createOscillator();
-        const gainL = ctx.createGain();
-        const panL = ctx.createStereoPanner();
-        panL.pan.value = -1;
-        oscL.type = 'sine';
-        oscL.frequency.value = freq;
-        gainL.gain.setValueAtTime(volume, now);
-        gainL.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-        oscL.connect(gainL);
-        gainL.connect(panL);
-        panL.connect(ctx.destination);
-        oscL.start(now);
-        oscL.stop(now + 0.2);
-        // Bip droit après 0.25s
-        setTimeout(() => {
-            const oscR = ctx.createOscillator();
-            const gainR = ctx.createGain();
-            const panR = ctx.createStereoPanner();
-            panR.pan.value = 1;
-            oscR.type = 'sine';
-            oscR.frequency.value = freq;
-            gainR.gain.setValueAtTime(volume, ctx.currentTime);
-            gainR.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-            oscR.connect(gainR);
-            gainR.connect(panR);
-            panR.connect(ctx.destination);
-            oscR.start();
-            oscR.stop(ctx.currentTime + 0.2);
-        }, 250);
-        // Indicateurs visuels
-        audioLeft.classList.add('active');
-        setTimeout(() => audioLeft.classList.remove('active'), 200);
-        setTimeout(() => {
-            audioRight.classList.add('active');
-            setTimeout(() => audioRight.classList.remove('active'), 200);
-        }, 250);
-    }
-    testSoundBtn.addEventListener('click', testSound);
 
     function stopContinuousTone() {
         if (continuousOsc) { try { continuousOsc.stop(); continuousOsc.disconnect(); } catch(e) {} continuousOsc = null; }
@@ -574,6 +513,7 @@
         if (continuousPan) { continuousPan.disconnect(); continuousPan = null; }
         lastPanSide = null;
     }
+
     function startContinuousTone() {
         if (!isSoundEnabled || !audioCtx || currentFrequency === 0 || soundTypeSelect.value !== 'tone') return;
         stopContinuousTone();
@@ -583,7 +523,7 @@
         continuousPan = audioCtx.createStereoPanner();
         continuousOsc.type = 'sine';
         continuousOsc.frequency.setValueAtTime(currentFrequency, now);
-        continuousGain.gain.setValueAtTime(currentVolume * 0.45, now);
+        continuousGain.gain.setValueAtTime(currentVolume * 0.6, now);
         continuousPan.pan.value = -1;
         continuousOsc.connect(continuousGain);
         continuousGain.connect(continuousPan);
@@ -591,6 +531,7 @@
         continuousOsc.start();
         lastPanSide = 'left';
     }
+
     function updateContinuousPan() {
         if (!isSoundEnabled || !audioCtx || soundTypeSelect.value !== 'tone' || !continuousPan || isPaused) return;
         const newSide = (direction === 1) ? 'right' : 'left';
@@ -602,6 +543,7 @@
             setTimeout(() => { audioLeft.classList.remove('active'); audioRight.classList.remove('active'); }, 180);
         }
     }
+
     function playBilateralBeep(side) {
         if (!isSoundEnabled || !audioCtx || isPaused || soundLock || soundTypeSelect.value === 'tone') return;
         let freq = currentFrequency > 0 ? currentFrequency : 440;
@@ -637,12 +579,14 @@
         osc.stop(now + duration);
         updateFlashIndicators(side);
     }
+
     function updateFlashIndicators(side) {
         audioLeft.classList.remove('active'); audioRight.classList.remove('active');
         dot.classList.add('sound-active');
         if (side === 'left') audioLeft.classList.add('active'); else audioRight.classList.add('active');
         setTimeout(() => { audioLeft.classList.remove('active'); audioRight.classList.remove('active'); dot.classList.remove('sound-active'); }, 150);
     }
+
     function checkEdgeSound() {
         if (!isSoundEnabled || isPaused || soundLock || soundTypeSelect.value === 'tone') return;
         const thresh = 4.5;
@@ -657,6 +601,52 @@
         }
         if (dotPos > 15 && dotPos < 85) lastSoundSide = null;
     }
+
+    function testSound() {
+        if (!isSoundEnabled) {
+            alert("Veuillez d'abord activer le son.");
+            return;
+        }
+        const ctx = initAudioContext();
+        if (!ctx) return;
+        const freq = currentFrequency > 0 ? currentFrequency : 440;
+        const now = ctx.currentTime;
+        const oscL = ctx.createOscillator();
+        const gainL = ctx.createGain();
+        const panL = ctx.createStereoPanner();
+        panL.pan.value = -1;
+        oscL.type = 'sine';
+        oscL.frequency.value = freq;
+        gainL.gain.setValueAtTime(currentVolume, now);
+        gainL.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        oscL.connect(gainL);
+        gainL.connect(panL);
+        panL.connect(ctx.destination);
+        oscL.start(now);
+        oscL.stop(now + 0.2);
+        setTimeout(() => {
+            const oscR = ctx.createOscillator();
+            const gainR = ctx.createGain();
+            const panR = ctx.createStereoPanner();
+            panR.pan.value = 1;
+            oscR.type = 'sine';
+            oscR.frequency.value = freq;
+            gainR.gain.setValueAtTime(currentVolume, ctx.currentTime);
+            gainR.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+            oscR.connect(gainR);
+            gainR.connect(panR);
+            panR.connect(ctx.destination);
+            oscR.start();
+            oscR.stop(ctx.currentTime + 0.2);
+        }, 250);
+        audioLeft.classList.add('active');
+        setTimeout(() => audioLeft.classList.remove('active'), 200);
+        setTimeout(() => {
+            audioRight.classList.add('active');
+            setTimeout(() => audioRight.classList.remove('active'), 200);
+        }, 250);
+    }
+    testSoundBtn.addEventListener('click', testSound);
 
     // ======================== ANIMATION & TIMER ========================
     function animateMovement(now) {
@@ -686,7 +676,7 @@
     }
     function handlePhaseEnd() {
         clearInterval(timerIntervalId);
-        if (isPaused) { // fin pause -> prochaine série
+        if (isPaused) {
             isPaused = false;
             document.body.classList.remove('pause-mode');
             statusMsg.style.display = 'none';
@@ -701,13 +691,13 @@
             animationId = requestAnimationFrame(animateMovement);
             startTimerLoop();
             updateSetDisplay();
-        } else { // fin série -> pause
+        } else {
             if (currentSet + 1 > totalSets) { endSession(); return; }
             isPaused = true;
             document.body.classList.add('pause-mode');
             statusMsg.style.display = 'block';
             statusMsg.innerText = '🧘 PAUSE · Respirez doucement';
-            statusMsg.style.color = '#e0a158'; // Couleur ambre douce
+            statusMsg.style.color = '#e0a158';
             timeLeft = pauseDurationSec;
             refreshTimer();
             if (soundTypeSelect.value === 'tone') stopContinuousTone();
@@ -735,12 +725,7 @@
     }
     function startSession() {
         if (isRunning) return;
-
-        // --- FORCER LA REPRISE AUDIO ---
-        if (isSoundEnabled) {
-            initAudioContext(); // s'assure que le contexte est démarré
-        }
-
+        if (isSoundEnabled) initAudioContext();
         totalSets = Math.min(40, parseInt(setsInput.value) || 6);
         setDurationSec = parseInt(setDurationInput.value) || 32;
         pauseDurationSec = parseInt(pauseDurationInput.value) || 12;
@@ -829,7 +814,7 @@
     floatingStop.addEventListener('click', stopSession);
     speedRange.addEventListener('input', () => { speedVal.innerText = speedRange.value + ' s'; });
     sizeRange.addEventListener('input', () => { sizeVal.innerText = sizeRange.value + 'px'; dot.style.width = sizeRange.value+'px'; dot.style.height = sizeRange.value+'px'; });
-    volumeRange.addEventListener('input', () => { volumeVal.innerText = volumeRange.value+'%'; currentVolume = volumeRange.value/100; if (continuousGain && soundTypeSelect.value === 'tone') continuousGain.gain.setValueAtTime(currentVolume*0.45, audioCtx.currentTime); });
+    volumeRange.addEventListener('input', () => { volumeVal.innerText = volumeRange.value+'%'; currentVolume = volumeRange.value/100; if (continuousGain && soundTypeSelect.value === 'tone') continuousGain.gain.setValueAtTime(currentVolume*0.6, audioCtx.currentTime); });
     soundToggle.addEventListener('click', toggleSound);
     freqBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -849,12 +834,10 @@
             if (soundTypeSelect.value === 'tone' && currentFrequency !== 0) startContinuousTone();
         }
     });
-
-    // Initialisation au chargement
     window.addEventListener('load', () => {
         updateUITexts();
         updateFrequencyUI();
-        resetAll();   // met timeLeft = 0, affiche 00:00 et réinitialise tout
+        resetAll();
         timerDisplay.innerText = "00:00";
         setDisplaySpan.innerHTML = `Série 0 / 6`;
     });
