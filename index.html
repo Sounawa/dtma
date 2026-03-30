@@ -17,7 +17,6 @@
             --success: #81c784;
             --warning: #ffb74d;
             --sound-active: #a1887f;
-            /* Point SIMPLE sans effets */
             --dot-color: #ffb74d;
         }
 
@@ -43,7 +42,6 @@
             background-image: radial-gradient(circle at 50% 50%, #2e3b2f 0%, var(--bg-pause) 100%);
         }
 
-        /* --- Zone de Stimulus --- */
         #stimulus-container {
             width: 95%;
             height: 200px;
@@ -57,14 +55,12 @@
         #dot {
             width: 70px;
             height: 70px;
-            /* Couleur unie SIMPLE - pas de dégradé */
             background-color: var(--dot-color);
             border-radius: 50%;
             position: absolute;
             left: 0;
             top: 50%;
             transform: translate(-50%, -50%);
-            /* AUCUN effet - supprimé blur et box-shadow */
             will-change: left;
             transition: opacity 0.3s;
             opacity: 0.85;
@@ -74,7 +70,6 @@
             opacity: 1;
         }
 
-        /* Indicateurs audio (très discrets) */
         .audio-indicator {
             position: fixed;
             top: 50%;
@@ -99,7 +94,6 @@
             background: rgba(161, 136, 127, 0.2);
         }
 
-        /* --- Panneau de Contrôle --- */
         .controls-panel {
             background: var(--panel-bg);
             backdrop-filter: blur(10px);
@@ -448,7 +442,6 @@
             font-size: 1rem;
         }
         
-        /* Test audio button */
         .test-sound-btn {
             background: rgba(100, 181, 246, 0.2);
             border: 1px solid var(--accent);
@@ -467,22 +460,14 @@
 </head>
 <body>
 
-    <!-- Indicateurs Audio -->
     <div class="audio-indicator left" id="audioLeft">🔊</div>
     <div class="audio-indicator right" id="audioRight">🔊</div>
-
-    <!-- Message de statut -->
     <div class="status-message" id="statusMessage"></div>
-
-    <!-- Zone de mouvement -->
     <div id="stimulus-container">
         <div id="dot"></div>
     </div>
-
-    <!-- Bouton d'urgence -->
     <div id="floating-stop" onclick="stopSession()">✕</div>
 
-    <!-- Panneau de Contrôle -->
     <div class="controls-panel" id="controls">
         <div class="info-display">
             <div class="timer-display" id="timerDisplay">00:00</div>
@@ -492,12 +477,10 @@
             </div>
         </div>
 
-        <!-- Avertissement Audio -->
         <div class="audio-warning" id="audioWarning">
             ⚠️ Activez le son et testez-le avant de démarrer
         </div>
 
-        <!-- Section Audio -->
         <div class="control-group" style="background: rgba(161, 136, 127, 0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(161, 136, 127, 0.2);">
             <div class="control-header">
                 <label style="color: var(--sound-active);">🎵 Son & Fréquences</label>
@@ -508,11 +491,8 @@
             </div>
             
             <div id="soundControls" style="opacity: 0.5; pointer-events: none; transition: opacity 0.3s;">
-                
-                <!-- Bouton TEST SON -->
                 <button class="test-sound-btn" onclick="testAudio()">🔊 Tester le son (clic requis)</button>
                 
-                <!-- Fréquences -->
                 <div class="control-group">
                     <div class="control-header">
                         <label>Fréquence émotionnelle</label>
@@ -558,13 +538,11 @@
                             <span class="badge badge-traditional">Tradition</span>
                         </button>
                     </div>
-                    
                     <div class="current-frequency" id="currentFrequencyDisplay">
                         Fréquence actuelle : <span class="hz-value">Aucune</span>
                     </div>
                 </div>
 
-                <!-- Volume -->
                 <div class="control-group">
                     <div class="control-header">
                         <label>Volume</label>
@@ -573,7 +551,6 @@
                     <input type="range" id="volumeRange" min="0" max="100" step="5" value="50">
                 </div>
 
-                <!-- Type de son -->
                 <div class="control-group">
                     <div class="control-header">
                         <label>Type de son</label>
@@ -587,14 +564,12 @@
                 </div>
             </div>
             
-            <!-- Disclaimer -->
             <div class="frequency-disclaimer">
                 <strong>ℹ️ Information :</strong> Les fréquences 6Hz et 10Hz sont basées sur la recherche en neurosciences. 
                 Les autres fréquences sont issues de traditions populaires. Cet outil ne remplace pas un accompagnement thérapeutique.
             </div>
         </div>
 
-        <!-- Paramètres EMDR -->
         <div class="control-group">
             <div class="control-header">
                 <label>Nombre de séries</label>
@@ -646,7 +621,6 @@
     </div>
 
     <script>
-        // --- Éléments DOM ---
         const dot = document.getElementById('dot');
         const controls = document.getElementById('controls');
         const startBtn = document.getElementById('startBtn');
@@ -663,8 +637,6 @@
         const sizeRange = document.getElementById('sizeRange');
         const speedVal = document.getElementById('speedVal');
         const sizeVal = document.getElementById('sizeVal');
-        
-        // Éléments Audio
         const soundToggle = document.getElementById('soundToggle');
         const soundStatus = document.getElementById('soundStatus');
         const soundControls = document.getElementById('soundControls');
@@ -678,7 +650,6 @@
         const currentFrequencyDisplay = document.getElementById('currentFrequencyDisplay');
         const frequencyBtns = document.querySelectorAll('.frequency-btn');
 
-        // --- Valeurs par défaut ---
         const DEFAULTS = {
             sets: 6,
             setDuration: 30,
@@ -691,7 +662,6 @@
             volume: 50
         };
 
-        // --- État ---
         let isRunning = false;
         let isPaused = false;
         let animationFrame;
@@ -700,13 +670,10 @@
         let direction = 1;
         let position = 0;
         let lastTime = 0;
-        
         let totalSets = 6;
         let currentSet = 0;
         let setDuration = 30;
         let pauseDuration = 10;
-        
-        // État Audio
         let isSoundEnabled = false;
         let audioContext = null;
         let currentVolume = 0.5;
@@ -717,7 +684,6 @@
         let continuousGain = null;
         let audioInitialized = false;
 
-        // --- Initialisation ---
         function updateLabels() {
             speedVal.innerText = speedRange.value + 's';
             sizeVal.innerText = sizeRange.value + 'px';
@@ -728,7 +694,6 @@
         function updateVolumeLabel() {
             volumeVal.innerText = volumeRange.value + '%';
             currentVolume = volumeRange.value / 100;
-            
             if (continuousGain && isRunning && !isPaused && audioContext) {
                 continuousGain.gain.setValueAtTime(currentVolume * 0.5, audioContext.currentTime);
             }
@@ -765,63 +730,46 @@
             timerDisplay.innerText = `${mins < 10 ? '0'+mins : mins}:${secs < 10 ? '0'+secs : secs}`;
         }
 
-        // --- GESTION DU SON (CORRIGÉ) ---
-        
-        // Fonction pour tester le son (obligatoire pour débloquer l'audio)
         function testAudio() {
             if (!isSoundEnabled) {
                 alert("Activez d'abord le son avec le bouton ci-dessus !");
                 return;
             }
-            
             initAudio();
-            
-            // Jouer un bip test gauche puis droite
             const now = audioContext.currentTime;
-            
-            // Bip gauche
             playTestBeep(-1, now);
-            // Bip droite
             playTestBeep(1, now + 0.3);
-            
-            alert("Vous devriez entendre 2 bips (gauche puis droite). Si non, vérifiez votre volume et vos haut-parleurs.");
+            alert("Vous devriez entendre 2 bips (gauche puis droite). Si non, vérifiez votre volume.");
         }
-        
+
         function playTestBeep(pan, time) {
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             const panNode = audioContext.createStereoPanner();
-            
             oscillator.type = 'sine';
             oscillator.frequency.setValueAtTime(440, time);
             gainNode.gain.setValueAtTime(currentVolume, time);
             gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
             panNode.pan.value = pan;
-            
             oscillator.connect(gainNode);
             gainNode.connect(panNode);
             panNode.connect(audioContext.destination);
-            
             oscillator.start(time);
             oscillator.stop(time + 0.2);
         }
 
         function initAudio() {
             if (audioInitialized) return;
-            
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 audioInitialized = true;
-                console.log('Audio Context créé');
             } catch(err) {
-                console.error('Erreur Audio:', err);
                 alert("Votre navigateur ne supporte pas l'audio Web. Essayez Chrome ou Firefox.");
             }
         }
 
         function toggleSound() {
             isSoundEnabled = !isSoundEnabled;
-            
             if (isSoundEnabled) {
                 soundToggle.classList.add('active');
                 soundStatus.innerText = 'ON';
@@ -829,7 +777,6 @@
                 soundControls.style.opacity = '1';
                 soundControls.style.pointerEvents = 'auto';
                 audioWarning.classList.remove('visible');
-                // Ne pas initialiser ici, attendre le test ou le démarrage
             } else {
                 soundToggle.classList.remove('active');
                 soundStatus.innerText = 'OFF';
@@ -838,45 +785,33 @@
                 soundControls.style.pointerEvents = 'none';
                 stopContinuousSound();
             }
-            
             updateSetDisplay();
         }
 
         function startContinuousSound() {
             if (!isSoundEnabled || !audioContext || currentFrequency === 0) return;
             if (soundType.value !== 'tone') return;
-            
             stopContinuousSound();
-            
             const now = audioContext.currentTime;
             continuousOscillator = audioContext.createOscillator();
             continuousGain = audioContext.createGain();
             const panNode = audioContext.createStereoPanner();
-            
             continuousOscillator.type = 'sine';
             continuousOscillator.frequency.setValueAtTime(currentFrequency, now);
             continuousGain.gain.setValueAtTime(currentVolume * 0.5, now);
-            
             panNode.pan.value = -1;
-            
             continuousOscillator.connect(continuousGain);
             continuousGain.connect(panNode);
             panNode.connect(audioContext.destination);
-            
             continuousOscillator.start(now);
-            
             window.continuousPanInterval = setInterval(() => {
                 if (!isPaused && isRunning && audioContext) {
                     const newPan = panNode.pan.value === -1 ? 1 : -1;
                     panNode.pan.setValueAtTime(newPan, audioContext.currentTime);
-                    
                     audioLeft.classList.remove('active');
                     audioRight.classList.remove('active');
-                    if (newPan === -1) {
-                        audioLeft.classList.add('active');
-                    } else {
-                        audioRight.classList.add('active');
-                    }
+                    if (newPan === -1) audioLeft.classList.add('active');
+                    else audioRight.classList.add('active');
                     setTimeout(() => {
                         audioLeft.classList.remove('active');
                         audioRight.classList.remove('active');
@@ -887,16 +822,10 @@
 
         function stopContinuousSound() {
             if (continuousOscillator) {
-                try {
-                    continuousOscillator.stop();
-                    continuousOscillator.disconnect();
-                } catch(e) {}
+                try { continuousOscillator.stop(); continuousOscillator.disconnect(); } catch(e) {}
                 continuousOscillator = null;
             }
-            if (continuousGain) {
-                continuousGain.disconnect();
-                continuousGain = null;
-            }
+            if (continuousGain) { continuousGain.disconnect(); continuousGain = null; }
             if (window.continuousPanInterval) {
                 clearInterval(window.continuousPanInterval);
                 window.continuousPanInterval = null;
@@ -906,17 +835,13 @@
         function playBilateralSound(side) {
             if (!isSoundEnabled || !audioContext || isPaused) return;
             if (soundType.value === 'tone') return;
-            
             const freq = currentFrequency > 0 ? currentFrequency : 440;
             const type = soundType.value;
             const now = audioContext.currentTime;
-            
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             const panNode = audioContext.createStereoPanner();
-            
             panNode.pan.value = side === 'left' ? -1 : 1;
-            
             switch(type) {
                 case 'beep':
                     oscillator.type = 'sine';
@@ -934,43 +859,33 @@
                     const osc2 = audioContext.createOscillator();
                     const gain2 = audioContext.createGain();
                     const pan2 = audioContext.createStereoPanner();
-                    
                     oscillator.type = 'sine';
                     oscillator.frequency.setValueAtTime(freq, now);
                     gainNode.gain.setValueAtTime(currentVolume * 0.8, now);
                     gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                    
                     osc2.type = 'sine';
                     osc2.frequency.setValueAtTime(freq, now + 0.12);
                     gain2.gain.setValueAtTime(currentVolume * 0.8, now + 0.12);
                     gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
-                    
                     pan2.pan.value = side === 'left' ? -1 : 1;
-                    
                     oscillator.connect(gainNode);
                     gainNode.connect(panNode);
                     panNode.connect(audioContext.destination);
-                    
                     osc2.connect(gain2);
                     gain2.connect(pan2);
                     pan2.connect(audioContext.destination);
-                    
                     oscillator.start(now);
                     oscillator.stop(now + 0.1);
                     osc2.start(now + 0.12);
                     osc2.stop(now + 0.22);
-                    
                     updateAudioIndicators(side);
                     return;
             }
-            
             oscillator.connect(gainNode);
             gainNode.connect(panNode);
             panNode.connect(audioContext.destination);
-            
             oscillator.start(now);
             oscillator.stop(now + 0.2);
-            
             updateAudioIndicators(side);
         }
 
@@ -978,15 +893,9 @@
             audioLeft.classList.remove('active');
             audioRight.classList.remove('active');
             dot.classList.remove('sound-active');
-            
-            if (side === 'left') {
-                audioLeft.classList.add('active');
-            } else {
-                audioRight.classList.add('active');
-            }
-            
+            if (side === 'left') audioLeft.classList.add('active');
+            else audioRight.classList.add('active');
             dot.classList.add('sound-active');
-            
             setTimeout(() => {
                 audioLeft.classList.remove('active');
                 audioRight.classList.remove('active');
@@ -996,39 +905,22 @@
 
         function checkAndPlaySound() {
             if (!isSoundEnabled || !isRunning || isPaused || soundLocked || !audioContext) return;
-            
             const leftThreshold = 5;
             const rightThreshold = 95;
-            
             let currentSide = null;
-            
-            if (position <= leftThreshold && direction === -1) {
-                currentSide = 'left';
-            } else if (position >= rightThreshold && direction === 1) {
-                currentSide = 'right';
-            }
-            
+            if (position <= leftThreshold && direction === -1) currentSide = 'left';
+            else if (position >= rightThreshold && direction === 1) currentSide = 'right';
             if (currentSide && currentSide !== lastSoundSide) {
                 playBilateralSound(currentSide);
                 lastSoundSide = currentSide;
-                
                 soundLocked = true;
-                setTimeout(() => {
-                    soundLocked = false;
-                }, 200);
+                setTimeout(() => { soundLocked = false; }, 200);
             }
-            
-            if (position > 20 && position < 80) {
-                lastSoundSide = null;
-            }
+            if (position > 20 && position < 80) lastSoundSide = null;
         }
 
-        // --- Réinitialisation ---
         function resetAll() {
-            if (isRunning) {
-                stopSession();
-            }
-
+            if (isRunning) stopSession();
             setsInput.value = DEFAULTS.sets;
             setDurationInput.value = DEFAULTS.setDuration;
             pauseDurationInput.value = DEFAULTS.pauseDuration;
@@ -1036,92 +928,58 @@
             sizeRange.value = DEFAULTS.size;
             volumeRange.value = DEFAULTS.volume;
             soundType.value = DEFAULTS.soundType;
-            
             frequencyBtns.forEach(btn => {
                 btn.classList.remove('active');
-                if (parseInt(btn.dataset.freq) === DEFAULTS.frequency) {
-                    btn.classList.add('active');
-                }
+                if (parseInt(btn.dataset.freq) === DEFAULTS.frequency) btn.classList.add('active');
             });
             currentFrequency = DEFAULTS.frequency;
             updateFrequencyDisplay(currentFrequency);
-            
-            if (isSoundEnabled) {
-                toggleSound();
-            }
-
+            if (isSoundEnabled) toggleSound();
             updateLabels();
             updateVolumeLabel();
             updateSetDisplay();
-            
             timeLeft = DEFAULTS.setDuration;
             resetTimerDisplay();
-
             position = 0;
             direction = 1;
             dot.style.left = '0%';
             lastSoundSide = null;
             soundLocked = false;
-
             resetBtn.innerText = "RÉINITIALISÉ ✓";
-            setTimeout(() => {
-                resetBtn.innerText = "RÉINITIALISER";
-            }, 1500);
+            setTimeout(() => { resetBtn.innerText = "RÉINITIALISER"; }, 1500);
         }
 
-        // --- Animation ---
         function animate(timestamp) {
             if (!isRunning || isPaused) return;
-
             if (!lastTime) lastTime = timestamp;
             const elapsed = timestamp - lastTime;
-            const speedFactor = 100 / (speedRange.value * 1000); 
+            const speedFactor = 100 / (speedRange.value * 1000);
             const move = elapsed * speedFactor * direction;
-            
             position += move;
-
-            if (position >= 100) {
-                position = 100;
-                direction = -1;
-            } else if (position <= 0) {
-                position = 0;
-                direction = 1;
-            }
-
+            if (position >= 100) { position = 100; direction = -1; }
+            else if (position <= 0) { position = 0; direction = 1; }
             dot.style.left = position + '%';
             lastTime = timestamp;
-            
             checkAndPlaySound();
-            
             animationFrame = requestAnimationFrame(animate);
         }
 
-        // --- Timer ---
         function startTimer() {
             timerInterval = setInterval(() => {
                 timeLeft--;
                 resetTimerDisplay();
-
-                if (timeLeft <= 0) {
-                    handleTimerEnd();
-                }
+                if (timeLeft <= 0) handleTimerEnd();
             }, 1000);
         }
 
         function handleTimerEnd() {
             clearInterval(timerInterval);
-            
-            if (isPaused) {
-                resumeNextSet();
-            } else {
+            if (isPaused) resumeNextSet();
+            else {
                 currentSet++;
                 updateSetDisplay();
-
-                if (currentSet >= totalSets) {
-                    endSession();
-                } else {
-                    startPause();
-                }
+                if (currentSet >= totalSets) endSession();
+                else startPause();
             }
         }
 
@@ -1129,50 +987,38 @@
             isPaused = true;
             cancelAnimationFrame(animationFrame);
             stopContinuousSound();
-            
             audioLeft.classList.remove('active');
             audioRight.classList.remove('active');
             dot.classList.remove('sound-active');
             lastSoundSide = null;
             soundLocked = false;
-            
             document.body.classList.add('pause-mode');
             statusMessage.style.display = 'block';
             statusMessage.innerText = "PAUSE - Respirez profondément";
             timerDisplay.style.color = "var(--success)";
-            
             timeLeft = pauseDuration;
             resetTimerDisplay();
             timerInterval = setInterval(() => {
                 timeLeft--;
                 resetTimerDisplay();
-                if (timeLeft <= 0) {
-                    handleTimerEnd();
-                }
+                if (timeLeft <= 0) handleTimerEnd();
             }, 1000);
         }
 
         function resumeNextSet() {
             isPaused = false;
-            
             document.body.classList.remove('pause-mode');
             statusMessage.style.display = 'none';
             timerDisplay.style.color = "var(--accent)";
-            
             position = 0;
             direction = 1;
             dot.style.left = '0%';
             lastSoundSide = null;
             soundLocked = false;
-            
             timeLeft = setDuration;
             resetTimerDisplay();
             lastTime = 0;
-            
-            if (soundType.value === 'tone' && currentFrequency > 0) {
-                startContinuousSound();
-            }
-            
+            if (soundType.value === 'tone' && currentFrequency > 0) startContinuousSound();
             animationFrame = requestAnimationFrame(animate);
             startTimer();
         }
@@ -1181,58 +1027,42 @@
             isRunning = false;
             stopContinuousSound();
             stopSessionUI();
-            
             statusMessage.style.display = 'block';
             statusMessage.innerText = "SÉANCE TERMINÉE";
             statusMessage.style.color = "var(--success)";
             timerDisplay.innerText = "FIN";
-            
             audioLeft.classList.remove('active');
             audioRight.classList.remove('active');
             dot.classList.remove('sound-active');
         }
 
-        // --- Contrôles ---
         function startSession() {
             if (isRunning) return;
-            
             if (isSoundEnabled && !audioInitialized) {
                 initAudio();
                 alert("⚠️ Pensez à tester le son avec le bouton 'Tester le son' avant de démarrer !");
             }
-            
-            if (!isSoundEnabled) {
-                audioWarning.classList.add('visible');
-            }
-            
+            if (!isSoundEnabled) audioWarning.classList.add('visible');
             totalSets = parseInt(setsInput.value) || DEFAULTS.sets;
             setDuration = parseInt(setDurationInput.value) || DEFAULTS.setDuration;
             pauseDuration = parseInt(pauseDurationInput.value) || DEFAULTS.pauseDuration;
-            
             currentSet = 0;
             isRunning = true;
             isPaused = false;
             lastTime = 0;
             lastSoundSide = null;
             soundLocked = false;
-            
             if (isSoundEnabled && audioInitialized) {
                 audioWarning.classList.remove('visible');
-                
-                if (soundType.value === 'tone' && currentFrequency > 0) {
-                    startContinuousSound();
-                }
+                if (soundType.value === 'tone' && currentFrequency > 0) startContinuousSound();
             }
-            
             startBtn.classList.add('hide');
             stopBtn.style.display = 'block';
             floatingStop.style.display = 'flex';
             controls.classList.add('hidden');
             statusMessage.style.display = 'none';
             document.body.classList.remove('pause-mode');
-            
             updateSetDisplay();
-            
             timeLeft = setDuration;
             resetTimerDisplay();
             animationFrame = requestAnimationFrame(animate);
@@ -1245,13 +1075,11 @@
             cancelAnimationFrame(animationFrame);
             clearInterval(timerInterval);
             stopContinuousSound();
-            
             audioLeft.classList.remove('active');
             audioRight.classList.remove('active');
             dot.classList.remove('sound-active');
             lastSoundSide = null;
             soundLocked = false;
-            
             stopSessionUI();
         }
 
@@ -1267,14 +1095,10 @@
         startBtn.addEventListener('click', startSession);
         stopBtn.addEventListener('click', stopSession);
         resetBtn.addEventListener('click', resetAll);
-        
         document.addEventListener('keydown', (e) => {
-            if (e.key === "Escape" && isRunning) {
-                stopSession();
-            }
+            if (e.key === "Escape" && isRunning) stopSession();
         });
 
-        // Initial render
         updateLabels();
         updateVolumeLabel();
         updateFrequencyDisplay(DEFAULTS.frequency);
