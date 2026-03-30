@@ -6,39 +6,25 @@
     <title>EMDR Confort Visuel</title>
     <style>
         :root {
-            /* Fond plus doux, moins bleu, plus neutre */
             --bg-color: #1a1a1a;
             --bg-gradient: #242424;
             --bg-pause: #1f2923;
-            
-            /* Panneau plus discret */
             --panel-bg: rgba(30, 30, 30, 0.85);
-            
-            /* Texte moins contrasté */
             --text-main: #e0e0e0;
             --text-muted: #888888;
-            
-            /* Accent plus doux */
             --accent: #64b5f6;
-            --accent-glow: rgba(100, 181, 246, 0.2);
-            
-            /* Couleurs d'état */
             --danger: #e57373;
             --success: #81c784;
             --warning: #ffb74d;
             --sound-active: #a1887f;
-            
-            /* --- NOUVEAU POINT AMBRE CONFORT --- */
-            --dot-color: #ffb74d; /* Ambre doux */
-            --dot-center: #ffe0b2; /* Centre plus clair */
-            --dot-glow: rgba(255, 183, 77, 0.15); /* Lueur très diffuse */
+            /* Point SIMPLE sans effets */
+            --dot-color: #ffb74d;
         }
 
         body {
             margin: 0;
             padding: 0;
             background-color: var(--bg-color);
-            /* Dégradé très subtil pour éviter l'effet "trou noir" */
             background-image: radial-gradient(circle at 50% 50%, var(--bg-gradient) 0%, var(--bg-color) 100%);
             height: 100vh;
             display: flex;
@@ -57,7 +43,7 @@
             background-image: radial-gradient(circle at 50% 50%, #2e3b2f 0%, var(--bg-pause) 100%);
         }
 
-        /* --- Zone de Stimulus (CENTRÉE) --- */
+        /* --- Zone de Stimulus --- */
         #stimulus-container {
             width: 95%;
             height: 200px;
@@ -69,30 +55,26 @@
         }
 
         #dot {
-            width: 70px; /* Légèrement plus grand pour faciliter le suivi */
+            width: 70px;
             height: 70px;
-            /* Dégradé radial très doux pour éviter les bords nets */
-            background: radial-gradient(circle, var(--dot-center) 0%, var(--dot-color) 60%, transparent 100%);
+            /* Couleur unie SIMPLE - pas de dégradé */
+            background-color: var(--dot-color);
             border-radius: 50%;
             position: absolute;
             left: 0;
             top: 50%;
             transform: translate(-50%, -50%);
-            /* Filtre de flou pour adoucir la lumière */
-            filter: blur(2px);
-            /* Lueur très diffuse */
-            box-shadow: 0 0 40px var(--dot-glow);
+            /* AUCUN effet - supprimé blur et box-shadow */
             will-change: left;
-            transition: box-shadow 0.3s, opacity 0.3s;
-            opacity: 0.9; /* Pas 100% pour réduire l'intensité */
+            transition: opacity 0.3s;
+            opacity: 0.85;
         }
 
         #dot.sound-active {
-            box-shadow: 0 0 60px rgba(255, 183, 77, 0.25);
             opacity: 1;
         }
 
-        /* Indicateurs audio (Très discrets) */
+        /* Indicateurs audio (très discrets) */
         .audio-indicator {
             position: fixed;
             top: 50%;
@@ -103,24 +85,21 @@
             background: rgba(161, 136, 127, 0.05);
             border: 1px solid rgba(161, 136, 127, 0.1);
             opacity: 0;
-            transition: opacity 0.3s, transform 0.3s;
+            transition: opacity 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 16px;
             pointer-events: none;
-            filter: blur(1px);
         }
         .audio-indicator.left { left: 30px; }
         .audio-indicator.right { right: 30px; }
         .audio-indicator.active {
             opacity: 1;
             background: rgba(161, 136, 127, 0.2);
-            border-color: rgba(161, 136, 127, 0.4);
-            transform: translateY(-50%) scale(1.1);
         }
 
-        /* --- Panneau de Contrôle (En bas) --- */
+        /* --- Panneau de Contrôle --- */
         .controls-panel {
             background: var(--panel-bg);
             backdrop-filter: blur(10px);
@@ -147,7 +126,6 @@
             transform: translateX(-50%) translateY(100%);
         }
 
-        /* Timer & Info Display */
         .info-display {
             text-align: center;
             margin-bottom: 15px;
@@ -157,9 +135,7 @@
             font-size: 2.5rem;
             font-weight: 200;
             color: var(--accent);
-            text-shadow: none; /* Supprimé pour moins de brillance */
             font-variant-numeric: tabular-nums;
-            opacity: 0.9;
         }
 
         .set-display {
@@ -185,10 +161,8 @@
             display: none;
             text-align: center;
             z-index: 5;
-            opacity: 0.9;
         }
 
-        /* Sliders & Inputs */
         .control-group {
             margin-bottom: 12px;
         }
@@ -227,10 +201,8 @@
             background: var(--accent);
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: none;
         }
 
-        /* Toggle Switch for Sound */
         .toggle-container {
             display: flex;
             align-items: center;
@@ -267,14 +239,12 @@
             transform: translateX(24px);
         }
 
-        /* Time Inputs Row */
         .time-inputs-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
 
-        /* Frequency Presets Grid */
         .frequency-presets {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -336,7 +306,6 @@
             color: #1a1a1a;
         }
 
-        /* Buttons Grid */
         .btn-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -363,15 +332,6 @@
             background: #90caf9;
         }
 
-        .btn-secondary {
-            background: #333333;
-            color: var(--text-main);
-        }
-
-        .btn-secondary:hover {
-            background: #444444;
-        }
-
         .btn-danger {
             background: rgba(229, 115, 115, 0.2);
             color: var(--danger);
@@ -395,7 +355,6 @@
             color: #1a1a1a;
         }
 
-        /* --- Bouton Flottant --- */
         #floating-stop {
             position: fixed;
             top: 20px;
@@ -418,7 +377,6 @@
 
         .hide { display: none !important; }
         
-        /* Scrollbar pour le panel */
         .controls-panel::-webkit-scrollbar {
             width: 6px;
         }
@@ -489,26 +447,42 @@
             color: var(--dot-color);
             font-size: 1rem;
         }
+        
+        /* Test audio button */
+        .test-sound-btn {
+            background: rgba(100, 181, 246, 0.2);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .test-sound-btn:hover {
+            background: rgba(100, 181, 246, 0.3);
+        }
     </style>
 </head>
 <body>
 
-    <!-- Indicateurs Audio Gauche/Droite -->
+    <!-- Indicateurs Audio -->
     <div class="audio-indicator left" id="audioLeft">🔊</div>
     <div class="audio-indicator right" id="audioRight">🔊</div>
 
-    <!-- Message de statut (Pause / Fin) -->
+    <!-- Message de statut -->
     <div class="status-message" id="statusMessage"></div>
 
-    <!-- Zone de mouvement (CENTRÉE) -->
+    <!-- Zone de mouvement -->
     <div id="stimulus-container">
         <div id="dot"></div>
     </div>
 
-    <!-- Bouton d'urgence flottant -->
+    <!-- Bouton d'urgence -->
     <div id="floating-stop" onclick="stopSession()">✕</div>
 
-    <!-- Panneau de Contrôle (En bas de page) -->
+    <!-- Panneau de Contrôle -->
     <div class="controls-panel" id="controls">
         <div class="info-display">
             <div class="timer-display" id="timerDisplay">00:00</div>
@@ -520,7 +494,7 @@
 
         <!-- Avertissement Audio -->
         <div class="audio-warning" id="audioWarning">
-            ⚠️ Activez le son avant de démarrer pour une expérience optimale
+            ⚠️ Activez le son et testez-le avant de démarrer
         </div>
 
         <!-- Section Audio -->
@@ -535,7 +509,10 @@
             
             <div id="soundControls" style="opacity: 0.5; pointer-events: none; transition: opacity 0.3s;">
                 
-                <!-- Fréquences Préréglées -->
+                <!-- Bouton TEST SON -->
+                <button class="test-sound-btn" onclick="testAudio()">🔊 Tester le son (clic requis)</button>
+                
+                <!-- Fréquences -->
                 <div class="control-group">
                     <div class="control-header">
                         <label>Fréquence émotionnelle</label>
@@ -612,9 +589,8 @@
             
             <!-- Disclaimer -->
             <div class="frequency-disclaimer">
-                <strong>ℹ️ Information :</strong> Les fréquences 6Hz et 10Hz sont basées sur la recherche en neurosciences (ondes cérébrales). 
-                Les autres fréquences sont issues de traditions populaires. Les effets varient selon les individus. 
-                Cet outil ne remplace pas un accompagnement thérapeutique.
+                <strong>ℹ️ Information :</strong> Les fréquences 6Hz et 10Hz sont basées sur la recherche en neurosciences. 
+                Les autres fréquences sont issues de traditions populaires. Cet outil ne remplace pas un accompagnement thérapeutique.
             </div>
         </div>
 
@@ -725,7 +701,6 @@
         let position = 0;
         let lastTime = 0;
         
-        // Gestion des séries
         let totalSets = 6;
         let currentSet = 0;
         let setDuration = 30;
@@ -740,6 +715,7 @@
         let lastSoundSide = null;
         let continuousOscillator = null;
         let continuousGain = null;
+        let audioInitialized = false;
 
         // --- Initialisation ---
         function updateLabels() {
@@ -753,8 +729,8 @@
             volumeVal.innerText = volumeRange.value + '%';
             currentVolume = volumeRange.value / 100;
             
-            if (continuousGain && isRunning && !isPaused) {
-                continuousGain.gain.setValueAtTime(currentVolume * 0.3, audioContext.currentTime);
+            if (continuousGain && isRunning && !isPaused && audioContext) {
+                continuousGain.gain.setValueAtTime(currentVolume * 0.5, audioContext.currentTime);
             }
         }
 
@@ -789,17 +765,57 @@
             timerDisplay.innerText = `${mins < 10 ? '0'+mins : mins}:${secs < 10 ? '0'+secs : secs}`;
         }
 
-        // --- Gestion du Son ---
-        function initAudio() {
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // --- GESTION DU SON (CORRIGÉ) ---
+        
+        // Fonction pour tester le son (obligatoire pour débloquer l'audio)
+        function testAudio() {
+            if (!isSoundEnabled) {
+                alert("Activez d'abord le son avec le bouton ci-dessus !");
+                return;
             }
-            if (audioContext.state === 'suspended') {
-                audioContext.resume().then(() => {
-                    console.log('Audio Context resumed');
-                }).catch(err => {
-                    console.error('Failed to resume audio:', err);
-                });
+            
+            initAudio();
+            
+            // Jouer un bip test gauche puis droite
+            const now = audioContext.currentTime;
+            
+            // Bip gauche
+            playTestBeep(-1, now);
+            // Bip droite
+            playTestBeep(1, now + 0.3);
+            
+            alert("Vous devriez entendre 2 bips (gauche puis droite). Si non, vérifiez votre volume et vos haut-parleurs.");
+        }
+        
+        function playTestBeep(pan, time) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const panNode = audioContext.createStereoPanner();
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(440, time);
+            gainNode.gain.setValueAtTime(currentVolume, time);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+            panNode.pan.value = pan;
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(panNode);
+            panNode.connect(audioContext.destination);
+            
+            oscillator.start(time);
+            oscillator.stop(time + 0.2);
+        }
+
+        function initAudio() {
+            if (audioInitialized) return;
+            
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioInitialized = true;
+                console.log('Audio Context créé');
+            } catch(err) {
+                console.error('Erreur Audio:', err);
+                alert("Votre navigateur ne supporte pas l'audio Web. Essayez Chrome ou Firefox.");
             }
         }
 
@@ -813,7 +829,7 @@
                 soundControls.style.opacity = '1';
                 soundControls.style.pointerEvents = 'auto';
                 audioWarning.classList.remove('visible');
-                initAudio();
+                // Ne pas initialiser ici, attendre le test ou le démarrage
             } else {
                 soundToggle.classList.remove('active');
                 soundStatus.innerText = 'OFF';
@@ -839,7 +855,7 @@
             
             continuousOscillator.type = 'sine';
             continuousOscillator.frequency.setValueAtTime(currentFrequency, now);
-            continuousGain.gain.setValueAtTime(currentVolume * 0.3, now);
+            continuousGain.gain.setValueAtTime(currentVolume * 0.5, now);
             
             panNode.pan.value = -1;
             
@@ -850,7 +866,7 @@
             continuousOscillator.start(now);
             
             window.continuousPanInterval = setInterval(() => {
-                if (!isPaused && isRunning) {
+                if (!isPaused && isRunning && audioContext) {
                     const newPan = panNode.pan.value === -1 ? 1 : -1;
                     panNode.pan.setValueAtTime(newPan, audioContext.currentTime);
                     
@@ -956,12 +972,6 @@
             oscillator.stop(now + 0.2);
             
             updateAudioIndicators(side);
-            
-            setTimeout(() => {
-                oscillator.disconnect();
-                gainNode.disconnect();
-                panNode.disconnect();
-            }, 500);
         }
 
         function updateAudioIndicators(side) {
@@ -985,7 +995,7 @@
         }
 
         function checkAndPlaySound() {
-            if (!isSoundEnabled || !isRunning || isPaused || soundLocked) return;
+            if (!isSoundEnabled || !isRunning || isPaused || soundLocked || !audioContext) return;
             
             const leftThreshold = 5;
             const rightThreshold = 95;
@@ -1013,7 +1023,7 @@
             }
         }
 
-        // --- Fonction de Réinitialisation ---
+        // --- Réinitialisation ---
         function resetAll() {
             if (isRunning) {
                 stopSession();
@@ -1059,7 +1069,7 @@
             }, 1500);
         }
 
-        // --- Moteur d'Animation ---
+        // --- Animation ---
         function animate(timestamp) {
             if (!isRunning || isPaused) return;
 
@@ -1086,7 +1096,7 @@
             animationFrame = requestAnimationFrame(animate);
         }
 
-        // --- Gestion du Timer et des Séries ---
+        // --- Timer ---
         function startTimer() {
             timerInterval = setInterval(() => {
                 timeLeft--;
@@ -1182,12 +1192,13 @@
             dot.classList.remove('sound-active');
         }
 
-        // --- Contrôles Principaux ---
+        // --- Contrôles ---
         function startSession() {
             if (isRunning) return;
             
-            if (isSoundEnabled && !audioContext) {
+            if (isSoundEnabled && !audioInitialized) {
                 initAudio();
+                alert("⚠️ Pensez à tester le son avec le bouton 'Tester le son' avant de démarrer !");
             }
             
             if (!isSoundEnabled) {
@@ -1205,8 +1216,7 @@
             lastSoundSide = null;
             soundLocked = false;
             
-            if (isSoundEnabled) {
-                initAudio();
+            if (isSoundEnabled && audioInitialized) {
                 audioWarning.classList.remove('visible');
                 
                 if (soundType.value === 'tone' && currentFrequency > 0) {
